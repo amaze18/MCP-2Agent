@@ -25,7 +25,7 @@ pip install -r requirements.txt
 
 ### Option 1: Start Both Servers (One Command)
 ```bash
-cd "/Users/anupam.purwar/Desktop/newsimp copy" && /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python -m uvicorn servers:search_app --port 8001 --host 0.0.0.0 & /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python -m uvicorn servers:summary_app --port 8002 --host 0.0.0.0 &
+cd "/Users/anupam.purwar/Desktop/mcp-2agent" && /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python -m uvicorn servers:search_app --port 8001 --host 0.0.0.0 & /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python -m uvicorn servers:summary_app --port 8002 --host 0.0.0.0 &
 ```
 
 ### Option 2: Start Servers Separately
