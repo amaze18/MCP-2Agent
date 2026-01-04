@@ -33,13 +33,13 @@ Open two terminal windows and run:
 
 **Terminal 1 (Search Server):**
 ```bash
-cd "/Users/anupam.purwar/Desktop/newsimp copy"
+cd "/Users/anupam.purwar/Desktop/mcp-2agent"
 /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python -m uvicorn servers:search_app --port 8001 --host 0.0.0.0
 ```
 
 **Terminal 2 (Summary Server):**
 ```bash
-cd "/Users/anupam.purwar/Desktop/newsimp copy"
+cd "/Users/anupam.purwar/Desktop/mcp-2agent"
 /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python -m uvicorn servers:summary_app --port 8002 --host 0.0.0.0
 ```
 
@@ -63,13 +63,13 @@ python run.py
 
 Start the Flask web application:
 ```bash
-cd "/Users/anupam.purwar/Desktop/newsimp copy"
+cd "/Users/anupam.purwar/Desktop/mcp-2agent"
 /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python app.py
 ```
 
 Or if using virtual environment:
 ```bash
-cd "/Users/anupam.purwar/Desktop/newsimp copy"
+cd "/Users/anupam.purwar/Desktop/mcp-2agent"
 source mcp_env/bin/activate
 python app.py
 ```
@@ -82,10 +82,10 @@ http://localhost:5001
 **Quick Start (All Services):**
 ```bash
 # Terminal 1: Start MCP servers
-cd "/Users/anupam.purwar/Desktop/newsimp copy" && /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python -m uvicorn servers:search_app --port 8001 --host 0.0.0.0 & /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python -m uvicorn servers:summary_app --port 8002 --host 0.0.0.0 &
+cd "/Users/anupam.purwar/Desktop/mcp-2agent" && /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python -m uvicorn servers:search_app --port 8001 --host 0.0.0.0 & /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python -m uvicorn servers:summary_app --port 8002 --host 0.0.0.0 &
 
 # Terminal 2: Start Flask app
-cd "/Users/anupam.purwar/Desktop/newsimp copy"
+cd "/Users/anupam.purwar/Desktop/mcp-2agent"
 /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python app.py
 ```
 
