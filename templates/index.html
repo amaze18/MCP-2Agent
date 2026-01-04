@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Agent Chat Interface</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="content-wrapper">
+        <div class="container">
+            <header>
+                <h1>🤖 MCP Agentic System</h1>
+                <p>Chat with your research agent</p>
+            </header>
+
+            <div class="main-content">
+                <div class="chat-container">
+                    <div class="intent-display" id="intentDisplay"></div>
+                    <div id="chatMessages" class="chat-messages"></div>
+                    
+                    <div class="chat-input-section">
+                        <form id="chatForm">
+                            <div class="input-group">
+                                <input 
+                                    type="text" 
+                                    id="queryInput" 
+                                    placeholder="Ask a question or request an action (e.g., 'Search for latest AI trends', 'Summarize my results')" 
+                                    required
+                                    autocomplete="off"
+                                >
+                                <button type="submit" id="submitBtn">Send</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <footer>
+                <p>MCP Agentic System - Planner-Executor Architecture</p>
+            </footer>
+        </div>
+
+    <div class="sidebar">
+        <h3>📜 Past Conversations</h3>
+        <div id="sidebarHistory" class="sidebar-history"></div>
+    </div>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chatForm');
+        const queryInput = document.getElementById('queryInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const chatMessages = document.getElementById('chatMessages');
+
+        // Add welcome message
+        addMessage('assistant', 'Hello! I\'m your research agent. I can help you search and summarize. What would you like to do?');
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const query = queryInput.value.trim();
+            if (!query) return;
+
+            // Add user message to chat
+            addMessage('user', query);
+            queryInput.value = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+
+            // Add loading message with intent-specific action
+            const loadingId = addMessage('assistant', 'Analyzing your request...', true);
+
+            try {
+                const response = await fetch('/api/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'An error occurred');
+                }
+
+                // Update loading message with intent-specific action
+                updateLoadingMessage(loadingId, data.intent);
+
+                // Remove loading message after a brief delay to show the action
+                setTimeout(() => {
+                    removeMessage(loadingId);
+                    // Display intent
+                    displayIntent(data.intent);
+                    // Add assistant response
+                    displayAgentResponse(data);
+                    // Update sidebar with all history
+                    loadSidebarHistory();
+                }, 500);
+                
+            } catch (err) {
+                removeMessage(loadingId);
+                addMessage('assistant', `Error: ${err.message}`, false, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send';
+                queryInput.focus();
+            }
+        });
+
+        function addMessage(sender, content, isLoading = false, type = 'normal') {
+            const messageId = 'msg-' + Date.now() + '-' + Math.random();
+            const messageDiv = document.createElement('div');
+            messageDiv.id = messageId;
+            messageDiv.className = `message ${sender}-message ${type}`;
+            
+            const senderLabel = sender === 'user' ? 'You' : 'Agent';
+            const icon = sender === 'user' ? '👤' : '🤖';
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="message-icon">${icon}</span>
+                    <span class="message-sender">${senderLabel}</span>
+                    ${isLoading ? '<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>' : ''}
+                </div>
+                <div class="message-content">${formatContent(content)}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return messageId;
+        }
+
+        function removeMessage(messageId) {
+            const msg = document.getElementById(messageId);
+            if (msg) msg.remove();
+        }
+
+        function updateLoadingMessage(messageId, intent) {
+            const msg = document.getElementById(messageId);
+            if (!msg) return;
+            
+            const actionMessages = {
+                'search': '🔍 Searching for information...',
+                'summarize': '📝 Summarizing results...',
+                'conversation_query': '💬 Analyzing conversation history...'
+            };
+            
+            const actionText = actionMessages[intent] || '🤖 Processing your request...';
+            const contentDiv = msg.querySelector('.message-content');
+            if (contentDiv) {
+                contentDiv.textContent = actionText;
+            }
+        }
+
+        function formatContent(content) {
+            // Simple formatting - convert newlines to <br>
+            return content.replace(/\n/g, '<br>');
+        }
+
+        function displayAgentResponse(data) {
+            // Handle conversation queries differently
+            if (data.intent === 'conversation_query' && data.conversation_response) {
+                let responseText = `💬 <strong>Conversation Response</strong><br>`;
+                responseText += `<div class="result-block">${data.conversation_response}</div>`;
+                addMessage('assistant', responseText);
+                return;
+            }
+            
+            // Show action that was performed
+            const actionEmojis = {
+                'search': '🔍',
+                'summarize': '📝',
+                'conversation_query': '💬'
+            };
+            const actionNames = {
+                'search': 'Searched',
+                'summarize': 'Summarized',
+                'conversation_query': 'Conversation Query'
+            };
+            
+            const emoji = actionEmojis[data.intent] || '🤖';
+            const actionName = actionNames[data.intent] || 'Processed';
+            
+            let responseText = `${emoji} <strong>${actionName}</strong><br>`;
+            if (data.executed_stages.length > 0) {
+                responseText += `<small>Stages: ${data.executed_stages.join(', ')}</small><br><br>`;
+            }
+
+            // Show messages being summarized (if available)
+            if (data.executed_stages.includes('summary') && data.summarizing_messages && data.summarizing_messages.length > 0) {
+                responseText += `<div class="result-block"><strong>📋 Messages Being Summarized</strong><br>`;
+                data.summarizing_messages.forEach((msg, idx) => {
+                    responseText += `<div style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-left: 3px solid #667eea; border-radius: 4px;">`;
+                    responseText += `<strong>Turn ${msg.turn}:</strong> ${msg.query ? msg.query.substring(0, 50) + '...' : 'N/A'}<br>`;
+                    responseText += `<em style="color: #666;">${msg.summary.substring(0, 100)}...</em>`;
+                    responseText += `</div>`;
+                });
+                responseText += `</div><br>`;
+            }
+
+            // Only show results for executed stages
+            if (data.executed_stages.includes('search') && data.search_results) {
+                responseText += `<div class="result-block"><strong>🔍 Search Results</strong> (Confidence: ${data.search_confidence})<br>${data.search_results}</div><br>`;
+            }
+            
+            if (data.executed_stages.includes('summary') && data.summary) {
+                responseText += `<div class="result-block"><strong>📝 Final Summary</strong> (Confidence: ${data.summary_confidence})<br>${data.summary}</div><br>`;
+            }
+
+            if (data.executed_stages.length === 0) {
+                responseText += 'No stages were executed.';
+            }
+
+            addMessage('assistant', responseText);
+        }
+
+        function displayIntent(intent) {
+            const intentDisplay = document.getElementById('intentDisplay');
+            if (!intentDisplay) return;
+            
+            const intentLabels = {
+                'search': '🔍 Search',
+                'summarize': '📝 Summarize',
+                'conversation_query': '💬 Conversation Query'
+            };
+            
+            intentDisplay.textContent = `Intent: ${intentLabels[intent] || intent}`;
+            intentDisplay.style.display = 'block';
+        }
+
+        function loadSidebarHistory() {
+            fetch('/api/history')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.history) {
+                        displaySidebarHistory(data.history); // Show all, no limit
+                    }
+                })
+                .catch(err => console.error('Failed to load history:', err));
+        }
+
+        function displaySidebarHistory(messages) {
+            const sidebar = document.getElementById('sidebarHistory');
+            if (!sidebar) return;
+            
+            if (messages.length === 0) {
+                sidebar.innerHTML = '<p class="no-history">No previous conversations</p>';
+                return;
+            }
+            
+            let html = '';
+            messages.reverse().forEach((msg, index) => {
+                const query = msg.query || 'N/A';
+                const summary = msg.summary ? msg.summary.substring(0, 80) + '...' : '';
+                
+                html += `
+                    <div class="sidebar-item">
+                        <div class="sidebar-query"><strong>${messages.length - index}.</strong> ${query}</div>
+                        ${summary ? `<div class="sidebar-summary">${summary}</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            sidebar.innerHTML = html;
+        }
+
+        // Load sidebar history on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSidebarHistory();
+        });
+    </script>
+</body>
+</html>
